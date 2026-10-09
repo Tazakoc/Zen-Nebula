@@ -26,16 +26,8 @@
   align-self: center !important;
   width: calc(100% - var(--zen-element-separation)) !important;
   margin-top: 8px !important;
+  height: 38px !important;
   position: relative !important;
-}
-
-/* Keep Zen's measured stack height and leave room above the sidebar footer. */
-:root[zen-sidebar-expanded="true"] #zen-media-controls-toolbar:not([hidden]) {
-  margin-bottom: 16px !important;
-  height: calc(
-    var(--zen-media-collapsed-height, 2.5rem) +
-      var(--zen-media-stack-peek, 8px) * var(--zen-media-stack-behind, 0)
-  ) !important;
 }
 
 /* Keyframes */
@@ -190,7 +182,6 @@
 }
 
 #zen-media-controls-toolbar:not(:hover) .show-on-hover {
-  padding-block: 0 !important;
   transition:
     opacity 0.15s ease,
     filter 0.15s ease,
