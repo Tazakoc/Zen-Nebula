@@ -116,6 +116,18 @@
     "margin": "12px 0"
   },
   {
+    "type": "checkbox",
+    "property": "nebula-strong-active-tab",
+    "label": "Add a strong outline to the active tab",
+    "margin": "12px 0"
+  },
+  {
+    "type": "checkbox",
+    "property": "nebula-disable-close-glow",
+    "label": "Disable the red close / reset hover glow",
+    "margin": "12px 0"
+  },
+  {
     "type": "separator",
     "label": "☄️ Workspace Buttons",
     "margin": "15px 0 15px 0"

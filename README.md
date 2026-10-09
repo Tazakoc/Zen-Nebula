@@ -264,6 +264,12 @@ Tested with a real extension on Zen 1.23.1b. If the sidebar is hidden, leave com
 
 In **Settings → Sine → Nebula's preferences → Tab Loading Animation**, select **Grayscale (No Zoom)**. This applies grayscale and dimming while a page loads without resizing it. Existing animation choices and the default are unchanged. **Tab Switch Animation** is a separate setting.
 
+### Tab visibility and hover options
+
+Under **Settings → Sine → Nebula's preferences → Glow Effects**, enable **Add a strong outline to the active tab** for an inset outline that remains visible on hover. **Disable the red close / reset hover glow** removes the red highlight without hiding the buttons or container colors. Both options are off by default.
+
+Bookmark autohide also supports Zen's single-toolbar layout. Enable the bookmarks toolbar in Zen first, then choose a reveal mode under **Bookmark bar** in Nebula's preferences. An open bookmark folder or keyboard focus within the bar keeps it visible.
+
 ### 6. Add the extension [Zen Internet by Sameerasw](https://addons.mozilla.org/en-US/firefox/addon/zen-internet/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search) (Optional)
 
 > This extension makes web pages transparent

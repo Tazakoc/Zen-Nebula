@@ -113,27 +113,29 @@ tab[label$=".pdf"] .tab-label-container {
 }
 
 /* Gradient overlay (right side) */
-.tabbrowser-tab .tab-background::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to left,
-    rgb(175 10 10 / 75%),
-    rgb(175 30 10 / 0%) 40%,
-    transparent 40%
-  );
-  filter: blur(12px) contrast(120%) brightness(150%);
-  opacity: 0;
-  transition: opacity 0.3s ease !important;
-  z-index: 3; /* under buttons */
-  pointer-events: none; /* prevents hover conflicts */
-}
+@media not (-moz-pref("nebula-disable-close-glow")) {
+  .tabbrowser-tab .tab-background::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to left,
+      rgb(175 10 10 / 75%),
+      rgb(175 30 10 / 0%) 40%,
+      transparent 40%
+    );
+    filter: blur(12px) contrast(120%) brightness(150%);
+    opacity: 0;
+    transition: opacity 0.3s ease !important;
+    z-index: 3; /* under buttons */
+    pointer-events: none; /* prevents hover conflicts */
+  }
 
-/* Show gradient when hovering close/reset */
-.tabbrowser-tab:has(.tab-close-button:hover, .tab-reset-button:hover)
-  .tab-background::before {
-  opacity: 0.7 !important;
+  /* Show gradient when hovering close/reset */
+  .tabbrowser-tab:has(.tab-close-button:hover, .tab-reset-button:hover)
+    .tab-background::before {
+    opacity: 0.7 !important;
+  }
 }
 
 /* Buttons */
@@ -204,6 +206,17 @@ html:not([zen-single-toolbar="true"], [zen-sidebar-expanded="true"])
     .tab-background {
     background-color: var(--nebula-color-selected) !important;
     box-shadow: 0 0 3px var(--nebula-color-shadow) !important;
+  }
+}
+
+/* An inset outline keeps selection visible on hover without changing tab size
+   or replacing container, multiselect and glow backgrounds. */
+@media (-moz-pref("nebula-strong-active-tab")) {
+  #tabbrowser-tabs
+    .tabbrowser-tab:is([selected], [visuallyselected])
+    .tab-background {
+    outline: 2px solid light-dark(rgb(0 0 0 / 70%), rgb(255 255 255 / 80%)) !important;
+    outline-offset: -2px !important;
   }
 }
 
