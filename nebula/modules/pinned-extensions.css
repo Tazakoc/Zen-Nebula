@@ -33,6 +33,30 @@
     gap: calc(var(--zen-toolbox-padding) - 3px) !important;
   }
 
+  /* The script measures the rows above the tabs and the player below them. */
+  :root:not([customizing])
+    #TabsToolbar
+    > :has(> #TabsToolbar-customization-target) {
+    min-height: 0 !important;
+  }
+
+  :root:not([customizing])
+    #TabsToolbar-customization-target:has(> .unified-extensions-item) {
+    min-height: 0 !important;
+    align-content: flex-start !important;
+
+    > #tabbrowser-tabs {
+      height: var(--nebula-pinned-tabs-height, calc(100% - 27px)) !important;
+      min-height: 0 !important;
+      flex: 0 0 100% !important;
+      transform: none !important;
+    }
+
+    > #zen-media-controls-toolbar {
+      flex-shrink: 0 !important;
+    }
+  }
+
   /* Without pinned extensions, let tabs shrink to reserve the player's height
      and margins instead of overflowing the wrapped row into the footer. */
   :root:not([customizing])

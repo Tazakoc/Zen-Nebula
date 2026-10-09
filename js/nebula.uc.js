@@ -103,10 +103,14 @@
           }
         });
       });
-      window.addEventListener("unload", () => this.destroy(), { once: true });
+      this._onWindowUnload = () => this.destroy();
+      window.addEventListener("unload", this._onWindowUnload, { once: true });
     },
 
     destroy() {
+      if (this._onWindowUnload) {
+        window.removeEventListener("unload", this._onWindowUnload);
+      }
       this._modules.forEach((m) => {
         try {
           m.destroy?.();
@@ -1427,6 +1431,114 @@
     }
   }
 
+  // Reserve space for wrapped pinned widgets and stacked media cards.
+  class NebulaPinnedLayoutModule {
+    init() {
+      this.target = document.getElementById("TabsToolbar-customization-target");
+      this.tabs = document.getElementById("tabbrowser-tabs");
+      this.media = document.getElementById("zen-media-controls-toolbar");
+      if (!this.target || !this.tabs) return;
+
+      this.schedule = () => {
+        if (this.frame) return;
+        this.frame = requestAnimationFrame(() => {
+          this.frame = null;
+          this.update();
+        });
+      };
+      this.resizeObserver = new ResizeObserver(this.schedule);
+      this.observeChildren = () => {
+        this.media = this.target.querySelector("#zen-media-controls-toolbar");
+        this.resizeObserver.disconnect();
+        this.resizeObserver.observe(this.target);
+        for (const child of this.target.children) {
+          // Our own tab-height write must not retrigger measurement.
+          if (child !== this.tabs) this.resizeObserver.observe(child);
+        }
+        this.schedule();
+      };
+      this.childObserver = new MutationObserver(this.observeChildren);
+      this.childObserver.observe(this.target, { childList: true });
+      this.rootObserver = new MutationObserver(this.schedule);
+      this.rootObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: [
+          "customizing",
+          "zen-sidebar-expanded",
+          "zen-compact-mode",
+        ],
+      });
+      Services.prefs.addObserver("nebula-pinned-extensions-mod", this.schedule);
+      this.observeChildren();
+    }
+
+    update() {
+      const property = "--nebula-pinned-tabs-height";
+      if (
+        !Services.prefs.getBoolPref("nebula-pinned-extensions-mod", false) ||
+        document.documentElement.hasAttribute("customizing") ||
+        !this.target.querySelector(":scope > .unified-extensions-item")
+      ) {
+        this.target.style.removeProperty(property);
+        return;
+      }
+      // Measure without the previous explicit tab height: otherwise adding a
+      // wrapped row can enlarge a flex ancestor and preserve an oversized value.
+      const previousHeight = this.target.style.getPropertyValue(property);
+      this.target.style.setProperty(property, "0px");
+      const box = this.target.getBoundingClientRect();
+      const tabsBox = this.tabs.getBoundingClientRect();
+      if (!box.height || !tabsBox.width) {
+        if (previousHeight)
+          this.target.style.setProperty(property, previousHeight);
+        else this.target.style.removeProperty(property);
+        return;
+      }
+      const targetStyle = getComputedStyle(this.target);
+      const tabsStyle = getComputedStyle(this.tabs);
+      const px = (value) => parseFloat(value) || 0;
+      let available =
+        box.bottom -
+        px(targetStyle.borderBottomWidth) -
+        px(targetStyle.paddingBottom) -
+        tabsBox.top -
+        px(tabsStyle.marginBottom);
+      if (this.media && getComputedStyle(this.media).display !== "none") {
+        const mediaStyle = getComputedStyle(this.media);
+        available -=
+          this.media.getBoundingClientRect().height +
+          px(mediaStyle.marginTop) +
+          px(mediaStyle.marginBottom) +
+          px(targetStyle.rowGap);
+      }
+      if (tabsStyle.boxSizing !== "border-box") {
+        available -=
+          px(tabsStyle.paddingTop) +
+          px(tabsStyle.paddingBottom) +
+          px(tabsStyle.borderTopWidth) +
+          px(tabsStyle.borderBottomWidth);
+      }
+      const height = `${Math.max(0, Math.floor(available))}px`;
+      if (this.target.style.getPropertyValue(property) !== height) {
+        this.target.style.setProperty(property, height);
+      }
+    }
+
+    destroy() {
+      if (this.frame) cancelAnimationFrame(this.frame);
+      this.resizeObserver?.disconnect();
+      this.childObserver?.disconnect();
+      this.rootObserver?.disconnect();
+      if (this.schedule) {
+        Services.prefs.removeObserver(
+          "nebula-pinned-extensions-mod",
+          this.schedule,
+        );
+      }
+      this.target?.style.removeProperty("--nebula-pinned-tabs-height");
+    }
+  }
+
   // Register Nebula Modules
   Nebula.register(NebulaPolyfillModule);
   Nebula.register(NebulaGradientSliderModule);
@@ -1436,7 +1548,13 @@
   Nebula.register(NebulaMediaCoverArtModule);
   Nebula.register(NebulaMenuModule);
   Nebula.register(NebulaCtrlTabDualBackgroundModule);
+  Nebula.register(NebulaPinnedLayoutModule);
 
   // Start the core
   Nebula.init();
+  // Let Sine replace the script in place instead of retaining the old instance.
+  if (typeof window.addUnloadListener === "function") {
+    const instance = window.Nebula;
+    window.addUnloadListener(() => instance.destroy());
+  }
 })();
