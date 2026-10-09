@@ -240,10 +240,12 @@ scrollbox {
       }
     }
 
-    html:not([nebula-single-toolbar]) #PersonalToolbar {
+    /* Keep the hidden state weaker than hover, focus and open-folder states. */
+    :where(html:not([nebula-single-toolbar])) #PersonalToolbar {
       position: absolute !important;
       z-index: 1 !important;
       opacity: 0 !important;
+      pointer-events: none !important;
       transform: translateY(-10px) !important;
       transition:
         opacity 200ms ease-out,
@@ -256,10 +258,10 @@ scrollbox {
     #PersonalToolbar:has(menupopup[open]),
     #PersonalToolbar:has(menu[open]),
     #PersonalToolbar:has(.bookmark-item[open]),
-    #nav-bar:hover + #PersonalToolbar,
     #PersonalToolbar:hover,
     #PersonalToolbar:focus-within {
       opacity: 1 !important;
+      transform: translateY(0) !important;
       pointer-events: auto !important;
       transition-delay: 0s !important;
     }

@@ -33,6 +33,11 @@
 /* Separate the player from the sidebar footer buttons. */
 :root[zen-sidebar-expanded="true"] #zen-media-controls-toolbar:not([hidden]) {
   margin-bottom: 24px !important;
+  /* Zen 1.23 reserves extra height for stacked media cards. */
+  height: calc(
+    var(--zen-media-collapsed-height, 2.5rem) +
+      var(--zen-media-stack-peek, 8px) * var(--zen-media-stack-behind, 0)
+  ) !important;
 }
 
 /* Keyframes */
@@ -187,6 +192,8 @@
 }
 
 #zen-media-controls-toolbar:not(:hover) .show-on-hover {
+  /* Collapsed metadata must not leave vertical padding behind. */
+  padding-block: 0 !important;
   transition:
     opacity 0.15s ease,
     filter 0.15s ease,
