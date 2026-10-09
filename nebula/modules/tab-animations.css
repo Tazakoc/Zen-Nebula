@@ -42,7 +42,7 @@
     filter 0.2s cubic-bezier(0.2, 0.7, 0.3, 1.2) !important;
 }
 
-@media not (-moz-pref("nebula-tab-loading-animation", 7)) {
+@media not ((-moz-pref("nebula-tab-loading-animation", 0)) or (-moz-pref("nebula-tab-loading-animation", 7))) {
   #main-window:has(.tabbrowser-tab[selected][busy])
     .browserSidebarContainer:not(
       [zen-split="true"],
