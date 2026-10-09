@@ -33,6 +33,24 @@
     gap: calc(var(--zen-toolbox-padding) - 3px) !important;
   }
 
+  /* Without pinned extensions, let tabs shrink to reserve the player's height
+     and margins instead of overflowing the wrapped row into the footer. */
+  :root:not([customizing])
+    #TabsToolbar-customization-target:not(:has(> .unified-extensions-item)) {
+    flex-flow: column nowrap !important;
+
+    > #tabbrowser-tabs {
+      height: auto !important;
+      min-height: 0 !important;
+      flex: 1 1 0% !important;
+      transform: none !important;
+    }
+
+    > #zen-media-controls-toolbar {
+      flex-shrink: 0 !important;
+    }
+  }
+
   #TabsToolbar-customization-target #Zen-tabs-wrapper {
     max-height: 700px !important;
   }
