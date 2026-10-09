@@ -132,6 +132,7 @@
       this.root = document.documentElement;
       this.compactObserver = null;
       this.modeObserver = null;
+      this._faviconRequest = 0;
 
       this.updateFaviconColor = this.updateFaviconColor.bind(this);
     }
@@ -203,16 +204,25 @@
     }
 
     async updateFaviconColor(e) {
-      if (e?.type === "TabAttrModified" && !e.detail.changed.includes("image"))
+      const tab = gBrowser.selectedTab;
+      if (
+        e?.type === "TabAttrModified" &&
+        (e.target !== tab || !e.detail.changed.includes("image"))
+      )
         return;
 
-      const tab = gBrowser.selectedTab;
-      const iconUrl = tab?.getAttribute("image");
-      if (!iconUrl) return;
-
-      // Debounce: delay update by 10ms
+      const request = ++this._faviconRequest;
       if (this._faviconTimeout) clearTimeout(this._faviconTimeout);
+      this._faviconTimeout = null;
+      const iconUrl = tab?.getAttribute("image");
+      if (!iconUrl) {
+        this.root.style.removeProperty("--nebula-selected-favicon-color");
+        return;
+      }
+
+      // Debounce rapid switches; invalidate work already loading an icon.
       this._faviconTimeout = setTimeout(async () => {
+        this._faviconTimeout = null;
         try {
           const img = new Image();
           img.crossOrigin = "anonymous";
@@ -221,6 +231,12 @@
             img.onload = resolve;
             img.onerror = resolve;
           });
+          if (
+            request !== this._faviconRequest ||
+            tab !== gBrowser.selectedTab ||
+            tab.getAttribute("image") !== iconUrl
+          )
+            return;
 
           const size = 16; // smaller canvas
           if (!this._faviconCanvas) {
@@ -291,7 +307,7 @@
         } catch (err) {
           console.error("[NebulaPolyfill] Favicon color error:", err);
         }
-      }, 100); // 10ms delay
+      }, 100);
     }
 
     // helper: convert HSL to RGB
@@ -352,6 +368,10 @@
     destroy() {
       this.compactObserver?.disconnect();
       this.modeObserver?.disconnect();
+      ++this._faviconRequest;
+      if (this._faviconTimeout) clearTimeout(this._faviconTimeout);
+      this._faviconTimeout = null;
+      this.root.style.removeProperty("--nebula-selected-favicon-color");
 
       if (window.gBrowser) {
         gBrowser.tabContainer.removeEventListener(
