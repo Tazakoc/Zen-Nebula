@@ -179,7 +179,7 @@
   }
 
   .zen-essentials-container
-    .tabbrowser-tab[selected="true"]
+    .tabbrowser-tab[selected]
     .tab-icon-stack
     > .tab-icon-image,
   .zen-essentials-container
