@@ -525,7 +525,7 @@
 
       gZenCompactModeManager.addEventListener(this._compactCallback);
 
-      if (this.root.hasAttribute("nebula-compact-mode")) {
+      if (this.root.getAttribute("zen-compact-mode") === "true") {
         this.startLiveTracking();
       }
 
@@ -533,7 +533,8 @@
     }
 
     _compactCallback() {
-      const isCompact = this.root.hasAttribute("nebula-compact-mode");
+      // Zen invokes this callback before the polyfill's MutationObserver runs.
+      const isCompact = this.root.getAttribute("zen-compact-mode") === "true";
       if (isCompact) {
         this.startLiveTracking();
       } else {
@@ -543,7 +544,7 @@
     }
 
     update() {
-      const isCompact = this.root.hasAttribute("nebula-compact-mode");
+      const isCompact = this.root.getAttribute("zen-compact-mode") === "true";
 
       if (!isCompact) {
         this.stopLiveTracking();

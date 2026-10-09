@@ -322,36 +322,8 @@ findbar {
   box-shadow: 0 4px 14px var(--nebula-color-shadow) !important;
 }
 
-#zen-tabbox-wrapper::before {
-  position: absolute !important;
-  z-index: 0 !important;
-  content: "" !important;
-  background-color: light-dark(
-    rgb(200 200 200 / 100%),
-    rgb(30 30 30 / 100%)
-  ) !important;
-  opacity: 0;
-  width: 89%;
-  top: 29px !important;
-  right: 30px;
-  height: 43px !important;
-  bottom: auto !important;
-  border-radius: 13px;
-  visibility: visible !important;
-  transition:
-    opacity 0.2s ease,
-    width 0.5s ease !important;
-}
-
-:has(
-    .browserSidebarContainer.deck-selected
-      > .browserContainer
-      > findbar:not([hidden])
-  )
-  #zen-tabbox-wrapper::before {
-  opacity: 1 !important;
-  width: 90.05%;
-}
+/* The findbar paints its own background. A backdrop on the shared tabbox
+   stretches across unrelated panes in split view. */
 
 findbar:not([hidden]) {
   visibility: visible !important;

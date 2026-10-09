@@ -44,20 +44,13 @@ groupbox:not(#sineInstallationGroup:popover-open) {
     outline: solid 1px #8882 !important;
   }
 
-  /* Top sites / personalize buttons on home/newtab */
+  /* Keep shortcuts and customization discoverable without hover. */
   .top-sites-list,
   .personalizeButtonWrapper {
-    opacity: 0 !important;
-    transition: opacity 0.3s ease-in-out;
-  }
-
-  .top-sites-list:hover,
-  .personalizeButtonWrapper:hover {
     opacity: 1 !important;
   }
 
   /* Hide default background elements */
-  .App > div:nth-child(2),
   .wallpaper {
     display: none !important;
   }
