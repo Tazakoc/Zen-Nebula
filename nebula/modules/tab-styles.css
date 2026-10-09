@@ -1,3 +1,14 @@
+/* Keep Nebula's rounded tabs when Zen supplies a global superellipse shape. */
+.tabbrowser-tab,
+.tabbrowser-tab::before,
+.tabbrowser-tab .tab-stack,
+.tabbrowser-tab .tab-background,
+.tabbrowser-tab .tab-background::before,
+.tabbrowser-tab .tab-background::after,
+tab-group[split-view-group] .tab-group-container {
+  corner-shape: round !important;
+}
+
 /* ------------------- PDF Tab Custom Icon ------------------- */
 
 tab[label$=".pdf"] img.tab-icon-image {

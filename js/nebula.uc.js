@@ -162,7 +162,7 @@
 
       // Compact mode detection
       this.compactObserver = Nebula.observePresence(
-        '[zen-compact-mode="true"]',
+        ':root[zen-compact-mode="true"]',
         "nebula-compact-mode",
       );
 
