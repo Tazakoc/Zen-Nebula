@@ -66,6 +66,47 @@ groupbox:not(#sineInstallationGroup:popover-open) {
   }
 }
 
+/* Nova keeps side columns and a six-tile row even in narrow split panes.
+   Stack its regions and let shortcuts wrap within the available page width. */
+@-moz-document url("about:home"), url("about:newtab") {
+  @media (width <= 700px) {
+    .nova-enabled.container {
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-template-rows: auto !important;
+      padding-inline: 16px !important;
+    }
+
+    .nova-enabled
+      :is(
+        .sidebar-inline-start,
+        .sidebar-inline-end,
+        .search-wrapper,
+        .content,
+        .content-full-width,
+        .sticky-search-sentinel
+      ) {
+      grid-column: 1 !important;
+      grid-row: auto !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+
+    .nova-enabled .search-inner-wrapper {
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+
+    .nova-enabled .content {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .nova-enabled .top-sites-list {
+      grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)) !important;
+      margin-inline: 0 !important;
+    }
+  }
+}
+
 /*
 @-moz-document url(about:home), url(about:newtab), url(about:privatebrowsing) {
   body, .App{
