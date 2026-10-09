@@ -76,21 +76,6 @@
       return this._modules.find((m) => m._name === name);
     },
 
-    observePresence(selector, attrName) {
-      const update = () => {
-        const found = !!document.querySelector(selector);
-        document.documentElement.toggleAttribute(attrName, found);
-      };
-      const observer = new MutationObserver(update);
-      observer.observe(document.documentElement, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      });
-      update();
-      return observer;
-    },
-
     init() {
       this.logger.log("⏳ Initializing core...");
       this._initialized = true;
@@ -165,14 +150,25 @@
       }
 
       // Compact mode detection
-      this.compactObserver = Nebula.observePresence(
-        ':root[zen-compact-mode="true"]',
-        "nebula-compact-mode",
-      );
+      const updateCompactMode = () => {
+        this.root.toggleAttribute(
+          "nebula-compact-mode",
+          this.root.getAttribute("zen-compact-mode") === "true",
+        );
+      };
+      this.compactObserver = new MutationObserver(updateCompactMode);
+      this.compactObserver.observe(this.root, {
+        attributes: true,
+        attributeFilter: ["zen-compact-mode"],
+      });
+      updateCompactMode();
 
       // Toolbar mode detection
       this.modeObserver = new MutationObserver(() => this.updateToolbarModes());
-      this.modeObserver.observe(this.root, { attributes: true });
+      this.modeObserver.observe(this.root, {
+        attributes: true,
+        attributeFilter: ["zen-sidebar-expanded", "zen-single-toolbar"],
+      });
       this.updateToolbarModes();
 
       // Favicon color detection

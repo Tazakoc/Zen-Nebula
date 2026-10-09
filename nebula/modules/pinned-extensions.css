@@ -1,5 +1,17 @@
 /* ------------------------- PINNED EXTENSIONS ------------------------- */
 
+/* Zen's native extension row also exists with Nebula's placement mod off. */
+#zen-sidebar-top-buttons-customization-target > .unified-extensions-item {
+  background-color: var(--nebula-color) !important;
+  border-radius: var(--nebula-border-radius) !important;
+  transition: background-color 0.2s ease;
+}
+
+#zen-sidebar-top-buttons-customization-target
+  > .unified-extensions-item:is(:hover, :focus-within, [open]) {
+  background-color: var(--nebula-color-hover) !important;
+}
+
 @media (-moz-pref("nebula-pinned-extensions-mod")) {
   :root[customizing] #TabsToolbar-customization-target {
     visibility: visible !important;

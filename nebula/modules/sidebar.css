@@ -455,6 +455,30 @@ findbar toolbarbutton:active {
   border: none !important;
 }
 
+/* Current Zen uses a shadow-DOM search input in Bookmarks and History.
+   Set its supported tokens rather than only painting the outer host. */
+@-moz-document url("chrome://browser/content/places/bookmarksSidebar.xhtml"),
+  url("chrome://browser/content/places/historySidebar.xhtml")
+{
+  #sidebar-search-container > #search-box {
+    --input-text-background-color: transparent;
+    --input-text-color: inherit;
+    --input-text-border: 1px solid transparent;
+    --input-search-border-radius: 10px;
+
+    padding: 0 !important;
+  }
+
+  #sidebar-search-container > #search-box:is(:hover, :focus-within) {
+    --input-text-background-color: light-dark(
+      rgb(255 255 255 / 10%),
+      rgb(0 0 0 / 20%)
+    );
+
+    background-color: transparent !important;
+  }
+}
+
 #sidebar-search-container > #search-box:hover,
 #viewButton:hover,
 #sidebar-search-container > #search-box:active,
