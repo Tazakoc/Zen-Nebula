@@ -30,6 +30,11 @@
   position: relative !important;
 }
 
+/* Separate the player from the sidebar footer buttons. */
+:root[zen-sidebar-expanded="true"] #zen-media-controls-toolbar:not([hidden]) {
+  margin-bottom: 24px !important;
+}
+
 /* Keyframes */
 @keyframes miniplayer-gradient {
   0% {
