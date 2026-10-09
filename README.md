@@ -246,13 +246,23 @@ body {
 
 ###
 
-<p align="left">• First pin an extension normally, it should be somewhere in the top bar like default zen<br><br>• Now, right click on the sidebar and go to customize toolbar mode, from there drag the extension from the top bar to above essentials (or you can say below the URLbar) it would look a bit weird but press save changes and it should look perfect<br><br>• In my personal opinion, place the bonjourr extension above essentials so you can easily open a new tab by clicking it</p>
+1. Open **Settings → Sine → Nebula's preferences** and enable **Enable pinned extensions mod**.
+2. In Zen's Extensions menu, pin the extension to the toolbar first.
+3. Right-click an empty toolbar area and choose **Customize Toolbar…**.
+4. Drag the extension button from the top toolbar into the **sidebar's tab area**, just above the essential tabs. The address bar changes appearance during customization; you do not need to move it or the essentials.
+5. Click **Done**. The extension may appear near the bottom while customizing; Nebula arranges it above the essentials after you finish.
+
+Tested with a real extension on Zen 1.23.1b. If the sidebar is hidden, leave compact mode and expand it before customizing. To undo the move, reopen **Customize Toolbar…** and drag the extension back to the top toolbar.
 
 <div align="center">
 
 <img height="400" src="https://github.com/user-attachments/assets/8121a9a4-e8ed-4c4e-8ed0-92bd775438bb" />
 
 </div>
+
+### Loading without page zoom
+
+In **Settings → Sine → Nebula's preferences → Tab Loading Animation**, select **Grayscale (No Zoom)**. This applies grayscale and dimming while a page loads without resizing it. Existing animation choices and the default are unchanged. **Tab Switch Animation** is a separate setting.
 
 ### 6. Add the extension [Zen Internet by Sameerasw](https://addons.mozilla.org/en-US/firefox/addon/zen-internet/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search) (Optional)
 

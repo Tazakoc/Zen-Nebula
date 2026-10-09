@@ -40,7 +40,8 @@
       { "label": "More Blur", "value": 2 },
       { "label": "Grayscale", "value": 4 },
       { "label": "Grayscale + Blur", "value": 5 },
-      { "label": "Blur (Old Default)", "value": 6 }
+      { "label": "Blur (Old Default)", "value": 6 },
+      { "label": "Grayscale (No Zoom)", "value": 7 }
     ]
   },
   {

@@ -29,6 +29,7 @@ export default {
           "toolbarbutton",
           "browser",
           "groupbox",
+          "moz-card",
           "vbox",
           "hbox",
           "findbar",

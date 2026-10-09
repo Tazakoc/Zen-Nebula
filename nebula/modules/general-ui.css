@@ -19,6 +19,8 @@ browser[transparent="true"] {
 :root {
   --attention-dot-color: transparent !important;
   --zen-themed-toolbar-bg-transparent: transparent !important;
+  /* Zen 1.22 applies this shape to controls and their generated backgrounds. */
+  --zen-squircle-value: 1 !important;
 }
 
 :root[nebula-zen-gradient-contrast-zero] {

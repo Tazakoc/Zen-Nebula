@@ -1437,6 +1437,7 @@
       this.target = document.getElementById("TabsToolbar-customization-target");
       this.tabs = document.getElementById("tabbrowser-tabs");
       this.media = document.getElementById("zen-media-controls-toolbar");
+      this.sidebar = document.getElementById("navigator-toolbox");
       if (!this.target || !this.tabs) return;
 
       this.schedule = () => {
@@ -1451,6 +1452,7 @@
         this.media = this.target.querySelector("#zen-media-controls-toolbar");
         this.resizeObserver.disconnect();
         this.resizeObserver.observe(this.target);
+        if (this.sidebar) this.resizeObserver.observe(this.sidebar);
         for (const child of this.target.children) {
           // Our own tab-height write must not retrigger measurement.
           if (child !== this.tabs) this.resizeObserver.observe(child);
@@ -1469,6 +1471,7 @@
         ],
       });
       Services.prefs.addObserver("nebula-pinned-extensions-mod", this.schedule);
+      window.addEventListener("aftercustomization", this.schedule);
       this.observeChildren();
     }
 
@@ -1497,8 +1500,15 @@
       const targetStyle = getComputedStyle(this.target);
       const tabsStyle = getComputedStyle(this.tabs);
       const px = (value) => parseFloat(value) || 0;
+      // Customization temporarily removes the address-bar row. Its return can
+      // grow the sidebar around the old tab height instead of shrinking it.
+      // Preserve the measured footer space, but keep it inside the viewport.
+      const trailingSpace = this.sidebar
+        ? Math.max(0, this.sidebar.getBoundingClientRect().bottom - box.bottom)
+        : 0;
+      const bottom = Math.min(box.bottom, window.innerHeight - trailingSpace);
       let available =
-        box.bottom -
+        bottom -
         px(targetStyle.borderBottomWidth) -
         px(targetStyle.paddingBottom) -
         tabsBox.top -
@@ -1529,6 +1539,7 @@
       this.resizeObserver?.disconnect();
       this.childObserver?.disconnect();
       this.rootObserver?.disconnect();
+      window.removeEventListener("aftercustomization", this.schedule);
       if (this.schedule) {
         Services.prefs.removeObserver(
           "nebula-pinned-extensions-mod",

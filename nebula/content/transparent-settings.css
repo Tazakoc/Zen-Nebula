@@ -13,6 +13,16 @@ groupbox:not(#sineInstallationGroup:popover-open) {
   background-color: transparent !important;
 }
 
+/* New Settings cards should use the same tint as the legacy groupboxes. */
+@-moz-document url-prefix("about:preferences") {
+  moz-card {
+    --card-background-color: light-dark(
+      rgb(255 255 255 / 25%),
+      rgb(0 0 0 / 35%)
+    ) !important;
+  }
+}
+
 /* ---------------- Transparent backgrounds for all about: pages ---------------- */
 
 @-moz-document url-prefix("about:") {
