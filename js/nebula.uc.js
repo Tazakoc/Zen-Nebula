@@ -133,21 +133,36 @@
       this.compactObserver = null;
       this.modeObserver = null;
       this._faviconRequest = 0;
+      this._destroyed = false;
+      this._startupTimer = null;
+      this._finishStartup = null;
 
       this.updateFaviconColor = this.updateFaviconColor.bind(this);
     }
 
     async init() {
-      // Wait until gBrowser is available
-      if (!window.gBrowser) {
-        await new Promise((resolve) => {
-          const check = setInterval(() => {
-            if (window.gBrowser?.tabContainer) {
-              clearInterval(check);
-              resolve();
-            }
-          }, 50);
+      // Startup can race theme reloads. Settle the wait on destruction and
+      // bound it so a missing browser never leaves a permanent polling loop.
+      if (this._destroyed) return;
+      if (!window.gBrowser?.tabContainer) {
+        const ready = await new Promise((resolve) => {
+          let remaining = 40;
+          this._finishStartup = (ready) => {
+            clearTimeout(this._startupTimer);
+            this._startupTimer = null;
+            this._finishStartup = null;
+            resolve(ready);
+          };
+          const check = () => {
+            if (this._destroyed) return;
+            if (window.gBrowser?.tabContainer) this._finishStartup(true);
+            else if (remaining-- > 0)
+              this._startupTimer = setTimeout(check, 250);
+            else this._finishStartup(false);
+          };
+          check();
         });
+        if (!ready || this._destroyed) return;
       }
 
       // Compact mode detection
@@ -366,6 +381,8 @@
     }
 
     destroy() {
+      this._destroyed = true;
+      this._finishStartup?.(false);
       this.compactObserver?.disconnect();
       this.modeObserver?.disconnect();
       ++this._faviconRequest;
@@ -373,7 +390,7 @@
       this._faviconTimeout = null;
       this.root.style.removeProperty("--nebula-selected-favicon-color");
 
-      if (window.gBrowser) {
+      if (window.gBrowser?.tabContainer) {
         gBrowser.tabContainer.removeEventListener(
           "TabSelect",
           this.updateFaviconColor,
