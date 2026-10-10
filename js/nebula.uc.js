@@ -1566,6 +1566,43 @@
     }
   }
 
+  // The PDF viewer can miss Sine's per-document content-style injection.
+  // A registered user sheet also reaches that viewer. Its rules are scoped
+  // to the PDF viewer; keep it registered while any Nebula window needs it.
+  class NebulaPDFStylesModule {
+    init() {
+      if (this._registered) return;
+      this._service = Cc[
+        "@mozilla.org/content/style-sheet-service;1"
+      ].getService(Ci.nsIStyleSheetService);
+      this._uri = Services.io.newURI(
+        "chrome://sine/content/Nebula/nebula/content/better-pdf.css",
+      );
+      if (!this._service.sheetRegistered(this._uri, this._service.USER_SHEET)) {
+        this._service.loadAndRegisterSheet(this._uri, this._service.USER_SHEET);
+      }
+      this._registered = true;
+    }
+
+    destroy() {
+      if (!this._registered) return;
+      this._registered = false;
+      const anotherOwner = Array.from(
+        Services.wm.getEnumerator("navigator:browser"),
+      ).some((win) =>
+        win.Nebula?._modules.some(
+          (mod) => mod._name === this._name && mod._registered,
+        ),
+      );
+      if (
+        !anotherOwner &&
+        this._service.sheetRegistered(this._uri, this._service.USER_SHEET)
+      ) {
+        this._service.unregisterSheet(this._uri, this._service.USER_SHEET);
+      }
+    }
+  }
+
   // Register Nebula Modules
   Nebula.register(NebulaPolyfillModule);
   Nebula.register(NebulaGradientSliderModule);
@@ -1576,6 +1613,7 @@
   Nebula.register(NebulaMenuModule);
   Nebula.register(NebulaCtrlTabDualBackgroundModule);
   Nebula.register(NebulaPinnedLayoutModule);
+  Nebula.register(NebulaPDFStylesModule);
 
   // Start the core
   Nebula.init();
