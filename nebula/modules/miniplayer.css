@@ -101,7 +101,10 @@
   font-size: 10px !important;
 }
 
-#zen-media-info-vbox::before {
+/* Suppress the painted title-edge fade on legacy and stacked media cards.
+   Zen keeps its text mask; the dark overlay clashes with album artwork. */
+#zen-media-info-vbox::before,
+#zen-media-controls-toolbar .zen-media-info-vbox::before {
   display: none !important;
 }
 
