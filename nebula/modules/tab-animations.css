@@ -1,5 +1,12 @@
 /* ------------------------ Glance Animation ----------------------- */
 
+/* Zen stretches the clicked-link snapshot across the popup while opening and
+   closing. Wide links become a sharp rectangular strip. Keep its layout box
+   for Zen's animation geometry, but show only the actual preview page. */
+.zen-glance-element-preview {
+  visibility: hidden !important;
+}
+
 .browserSidebarContainer.zen-glance-background.deck-selected {
   filter: blur(8px) contrast(120%);
 }
