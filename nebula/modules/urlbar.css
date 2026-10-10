@@ -298,3 +298,27 @@
     background-position: -300% 50%;
   }
 }
+
+/* Keep invisible result gradients idle, as with tab hover gradients. */
+#urlbar[open] #urlbar-results > *::before {
+  animation-play-state: paused;
+}
+
+#urlbar[open] #urlbar-results > *:hover::before {
+  animation-play-state: running;
+}
+
+/* No Animation includes the popup, result entrance and decorative motion. */
+@media (-moz-pref("nebula-urlbar-animation", 0)) {
+  #urlbar[open],
+  #urlbar-results .urlbarView-row,
+  #urlbar[open] #urlbar-results > *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  #urlbar-results .urlbarView-row {
+    opacity: 1;
+    transform: none;
+  }
+}
