@@ -1,0 +1,124 @@
+/* Personal fork preferences migrated from userChrome.css. */
+/* Solid address/command panel. */
+#urlbar[open],
+#urlbar[open] #urlbar-background,
+#urlbar-background {
+  background: var(--zen-colors-tertiary) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}
+
+/* Ctrl+F find bar: match Zen tertiary color */
+
+:root #zen-tabbox-wrapper .browserContainer > findbar {
+  position: absolute !important;
+  inset: auto auto 24px 50% !important;
+  width: min(650px, calc(100% - 20px)) !important;
+  min-width: 0 !important;
+  max-width: calc(100% - 20px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  transform: translateX(-50%) !important;
+  padding: 8px 10px !important;
+  margin: 0 !important;
+  background: var(--zen-colors-tertiary) !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgb(255 255 255 / 15%) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 35%) !important;
+  opacity: 1 !important;
+  overflow: auto !important;
+  z-index: 99999 !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar .findbar-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: auto !important;
+  gap: 6px !important;
+  overflow: visible !important;
+}
+
+:root
+  #zen-tabbox-wrapper
+  .browserContainer
+  > findbar
+  .findbar-container
+  > :first-child {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar .findbar-textbox {
+  flex: 1 1 auto !important;
+  min-width: min(200px, 100%) !important;
+  background: var(--zen-colors-tertiary) !important;
+  color: inherit !important;
+  border: 1px solid rgb(255 255 255 / 12%) !important;
+  border-radius: 8px !important;
+  padding: 5px 8px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar toolbarbutton {
+  width: 24px !important;
+  height: 24px !important;
+  padding: 3px !important;
+  background: var(--zen-colors-tertiary) !important;
+  border-radius: 7px !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar toolbarbutton:hover {
+  filter: brightness(1.15) !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar .findbar-close {
+  margin-left: 4px !important;
+}
+
+/* XUL checkbox used by Firefox find bars. */
+/* stylelint-disable-next-line selector-type-no-unknown */
+:root #zen-tabbox-wrapper .browserContainer > findbar checkbox {
+  margin: 2px 4px !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar[hidden] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) translateY(20px) !important;
+}
+
+:root #zen-tabbox-wrapper .browserContainer > findbar:not([hidden]) {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(-50%) !important;
+}
+
+:root #zen-tabbox-wrapper::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Hide the "+ New Tab" button in the vertical tab strip. Ctrl+T still works.
+   NOT doable with a pref: zen.tabs.show-newtab-vertical only forces the button
+   VISIBLE (display:flex !important in vertical-tabs.css); setting it false just
+   drops that override, it never hides anything. zen.view.show-newtab-button-top
+   only sets order:-1, i.e. position. */
+#tabs-newtab-button {
+  display: none !important;
+}
+
+/* Keep keyboard focus visible in the migrated find field. */
+:root
+  #zen-tabbox-wrapper
+  .browserContainer
+  > findbar
+  .findbar-textbox:focus-within {
+  outline: 2px solid var(--toolbar-color, currentcolor) !important;
+  outline-offset: 1px !important;
+}

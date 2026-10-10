@@ -16,4 +16,5 @@
 
 /* config import */
 @import url("config.css");
+@import url("modules/personal-ui.css");
 @import url("modules/reduced-motion.css");

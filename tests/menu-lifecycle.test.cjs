@@ -7,7 +7,7 @@ const source = fs.readFileSync(
 );
 const start = source.indexOf("  class NebulaMenuModule");
 const end = source.indexOf(
-  "  // ========== NebulaCtrlTabDualBackgroundModule",
+  "  // Reserve space for wrapped pinned widgets",
   start,
 );
 const frames = new Map(),

@@ -180,72 +180,88 @@ browser {
   backface-visibility: hidden;
 }
 
-/* ------------------ Ctrl Tab Styling ------------------- */
-
-#nebula-ctrltab-background-below {
-  background: var(--zen-main-browser-background);
-  border-radius: var(--nebula-border-radius);
-}
-
-#nebula-ctrltab-background-above {
-  backdrop-filter: var(--nebula-glass);
-  border-radius: var(--nebula-border-radius);
-}
+/* ------------------ Minimal Ctrl Tab ------------------- */
 
 #ctrlTab-panel {
-  --panel-background-color: var(--nebula-color-glass) !important;
-  --panel-text-color: light-dark(#1b1b1b, #f5f5f5) !important;
-  --panel-border-radius: var(--nebula-border-radius) !important;
+  --panel-background-color: var(--zen-colors-tertiary, #101114) !important;
+  --panel-text-color: var(--toolbar-color, #f5f5f5) !important;
+  --panel-border-color: transparent !important;
+  --panel-border-radius: 12px !important;
+  --panel-padding: 18px !important;
 
-  border-radius: calc(var(--nebula-border-radius) + 4px) !important;
-  scale: 0.85;
-  box-shadow: 0 4px 20px var(--nebula-color-shadow) !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  scale: none !important;
+  font-weight: normal !important;
 }
 
-/* Remove default focus/hover borders */
-.ctrlTab-preview-inner {
+#ctrlTab-previews {
+  gap: 18px !important;
+}
+
+#ctrlTab-panel .ctrlTab-preview-inner {
   margin: 0 !important;
+  padding: 0 !important;
   border: none !important;
-  border-radius: var(--nebula-border-radius) !important;
-  transition:
-    transform 0.2s ease-out,
-    /* smoother scale */ background-color 0.2s ease-out,
-    box-shadow 0.2s ease-out;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+  transition: none !important;
 }
 
-/* Hover effect for previews */
-.ctrlTab-preview-inner:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 15px var(--nebula-color-shadow);
-}
-
-/* Canvas inside each preview */
-.ctrlTab-preview-inner .ctrlTab-canvas {
-  border-radius: inherit !important;
+#ctrlTab-panel .ctrlTab-canvas {
+  border-radius: 6px !important;
   overflow: hidden;
+  margin-bottom: 10px !important;
+  box-shadow: none !important;
 }
 
-/* Favicon container alignment */
-.ctrlTab-preview-inner .ctrlTab-favicon-container {
+/* Selection belongs to the preview, rather than another surrounding card. */
+#ctrlTab-panel .ctrlTab-preview:focus .ctrlTab-canvas {
+  outline: 2px solid var(--toolbar-color, #f5f5f5) !important;
+  outline-offset: 3px !important;
+}
+
+#ctrlTab-panel .ctrlTab-preview:hover .ctrlTab-label,
+#ctrlTab-panel .ctrlTab-preview:focus .ctrlTab-label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+#ctrlTab-panel .ctrlTab-favicon-container {
   justify-content: center !important;
 }
 
-.ctrlTab-preview-inner .ctrlTab-favicon-container image {
-  border-radius: 50% !important;
+#ctrlTab-panel .ctrlTab-favicon[src] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
 }
 
-/* Label spacing */
-.ctrlTab-preview-inner .ctrlTab-label {
-  margin-top: 1em !important;
-  font-size: 16px !important;
+#ctrlTab-panel .ctrlTab-label {
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  text-shadow: none !important;
 }
 
-/* Focused / selected preview effect */
-.ctrlTab-preview:focus > .ctrlTab-preview-inner {
-  background-color: var(--nebula-color-selected) !important;
-  outline: 2px solid color-mix(in srgb, currentcolor 70%, transparent);
-  outline-offset: 2px;
-  border-radius: var(--nebula-border-radius) !important;
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px var(--nebula-color-shadow) !important;
+#ctrlTab-showAll {
+  margin-top: 14px !important;
+  padding: 6px 10px !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+#ctrlTab-showAll:focus {
+  outline: 2px solid currentcolor !important;
+  outline-offset: 2px !important;
 }
