@@ -92,6 +92,16 @@
       return this._modules.find((m) => m._name === name);
     },
 
+    getOverlayPosition(rect, container) {
+      // Absolute children start at the container's padding edge, not at the
+      // viewport origin. Account for its border and scroll position as well.
+      const origin = container.getBoundingClientRect();
+      return {
+        top: `${rect.top - origin.top - container.clientTop + container.scrollTop}px`,
+        left: `${rect.left - origin.left - container.clientLeft + container.scrollLeft}px`,
+      };
+    },
+
     init() {
       if (this._destroyed || this._initialized || this._initializing) return;
       this.logger.log("⏳ Initializing core...");
@@ -684,8 +694,7 @@
 
       if (isVisible) {
         Object.assign(this.overlay.style, {
-          top: `${rect.top + window.scrollY}px`,
-          left: `${rect.left + window.scrollX}px`,
+          ...Nebula.getOverlayPosition(rect, this.browser),
           width: `${rect.width}px`,
           height: `${rect.height}px`,
           display: "block",
@@ -822,8 +831,7 @@
 
       if (isVisible) {
         Object.assign(this.overlay.style, {
-          top: `${rect.top + window.scrollY}px`,
-          left: `${rect.left + window.scrollX}px`,
+          ...Nebula.getOverlayPosition(rect, this.browser),
           width: `${rect.width}px`,
           height: `${rect.height}px`,
           display: "block",
@@ -965,8 +973,7 @@
 
       if (isVisible) {
         Object.assign(this.overlay.style, {
-          top: `${rect.top + window.scrollY}px`,
-          left: `${rect.left + window.scrollX}px`,
+          ...Nebula.getOverlayPosition(rect, this.browser),
           width: `${rect.width}px`,
           height: `${rect.height}px`,
           display: "block",
@@ -1512,8 +1519,7 @@
         height: r.height,
       };
       const style = {
-        top: `${r.top + window.scrollY}px`,
-        left: `${r.left + window.scrollX}px`,
+        ...Nebula.getOverlayPosition(r, this.browser),
         width: `${r.width}px`,
         height: `${r.height}px`,
         display: "block",
