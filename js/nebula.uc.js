@@ -398,6 +398,8 @@
       this.root = document.documentElement;
       this.gradientSlider = null;
       this._patched = false;
+      this._destroyed = false;
+      this._pending = new Set();
       this._sliderHandler = this.sync.bind(this);
 
       // Store original methods without polluting prototype
@@ -409,6 +411,7 @@
         () => document.querySelector("#PanelUI-zen-gradient-generator-opacity"),
         (slider) => {
           this.gradientSlider = slider;
+          this._originalMin = slider.getAttribute("min");
           slider.min = 0.0; // force min opacity
           slider.addEventListener("input", this._sliderHandler);
 
@@ -421,13 +424,18 @@
     _waitFor(fn, callback, maxRetries = 40) {
       let retries = maxRetries;
       const tryFind = () => {
+        if (this._destroyed) return;
         const el = fn();
         if (el) return callback(el);
         if (retries-- > 0) {
           Nebula.logger.debug?.(
             `[GradientSlider] Waiting… retries left: ${retries}`,
           );
-          requestAnimationFrame(tryFind);
+          const timer = setTimeout(() => {
+            this._pending.delete(timer);
+            tryFind();
+          }, 250);
+          this._pending.add(timer);
         } else {
           Nebula.logger.error("❌ [GradientSlider] Target not found.");
         }
@@ -436,7 +444,7 @@
     }
 
     sync() {
-      if (!this.gradientSlider) return;
+      if (!this.gradientSlider || this._destroyed) return;
       const val = +this.gradientSlider.value;
       this.root.style.setProperty(
         "--nebula-gradient-opacity",
@@ -450,35 +458,53 @@
 
       this._waitFor(
         () =>
-          window.nsZenThemePicker?.prototype ||
-          window.browser?.gZenThemePicker?.constructor?.prototype,
+          window.gZenThemePicker ||
+          window.browser?.gZenThemePicker ||
+          window.nsZenThemePicker?.prototype,
         (proto) => {
           if (!proto?.blendWithWhiteOverlay) return;
 
           // Save original
           this._origMethods.set(proto, proto.blendWithWhiteOverlay);
+          this._patchTarget = proto;
+          this._originalDescriptor = Object.getOwnPropertyDescriptor(
+            proto,
+            "blendWithWhiteOverlay",
+          );
 
           const moduleInstance = this;
+          const original = proto.blendWithWhiteOverlay;
 
-          proto.blendWithWhiteOverlay = function (baseColor, opacity) {
-            const val = +moduleInstance.gradientSlider?.value ?? opacity;
-            if (val === 0) {
+          this._blendWrapper = function (baseColor, opacity) {
+            const raw = moduleInstance.gradientSlider?.value;
+            const val =
+              raw !== undefined && raw !== null && raw !== ""
+                ? Number(raw)
+                : opacity;
+            if (!moduleInstance._destroyed && val === 0) {
               if (Array.isArray(baseColor)) {
-                return `rgba(${baseColor.join(",")},0)`;
+                return `rgba(${baseColor.slice(0, 3).join(",")},0)`;
               }
               if (
                 typeof baseColor === "string" &&
                 baseColor.startsWith("rgb")
               ) {
-                return baseColor.replace(/rgb(a)?\(([^)]+)\)/, "rgba($2, 0)");
+                const channels = baseColor
+                  .match(/^rgba?\(([^)]+)\)$/)?.[1]
+                  .trim()
+                  .split(/[,\s/]+/)
+                  .slice(0, 3);
+                if (channels?.length === 3)
+                  return `rgba(${channels.join(",")},0)`;
               }
               return "rgba(0,0,0,0)";
             }
             // Call the original method with the correct context
-            return moduleInstance._origMethods
-              .get(proto)
-              .call(this, baseColor, opacity);
+            return original.call(this, baseColor, opacity);
           };
+          // Patch the current window's picker, rather than sharing its slider
+          // value with other windows through the native prototype.
+          proto.blendWithWhiteOverlay = this._blendWrapper;
 
           this._patched = true;
           Nebula.logger.log(
@@ -489,19 +515,35 @@
     }
 
     destroy() {
+      this._destroyed = true;
+      for (const timer of this._pending) clearTimeout(timer);
+      this._pending.clear();
       if (this.gradientSlider) {
         this.gradientSlider.removeEventListener("input", this._sliderHandler);
+        if (this.gradientSlider.getAttribute("min") === "0") {
+          if (this._originalMin === null)
+            this.gradientSlider.removeAttribute("min");
+          else this.gradientSlider.setAttribute("min", this._originalMin);
+        }
         this.gradientSlider = null;
       }
 
       if (this._patched) {
-        const proto =
-          window.nsZenThemePicker?.prototype ||
-          window.browser?.gZenThemePicker?.constructor?.prototype;
-        if (proto && this._origMethods.has(proto)) {
-          proto.blendWithWhiteOverlay = this._origMethods.get(proto);
-          this._origMethods.delete(proto);
+        const target = this._patchTarget;
+        if (target?.blendWithWhiteOverlay === this._blendWrapper) {
+          if (this._originalDescriptor) {
+            Object.defineProperty(
+              target,
+              "blendWithWhiteOverlay",
+              this._originalDescriptor,
+            );
+          } else {
+            delete target.blendWithWhiteOverlay;
+          }
         }
+        this._origMethods.delete(target);
+        this._patchTarget = null;
+        this._blendWrapper = null;
         this._patched = false;
       }
 
