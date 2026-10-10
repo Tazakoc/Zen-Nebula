@@ -1618,6 +1618,34 @@
         this.open();
       };
       this.switcher.onKeyDown = this.keyDown;
+      this.originalOpenPanel = this.switcher._openPanel;
+      this.originalColumns = this.switcher.previewsPerRow;
+      if (typeof this.originalOpenPanel === "function") {
+        this.openPanel = function (...args) {
+          // Size from the browser window, not the full monitor. Native opening
+          // still positions the popup and owns keyboard focus and dismissal.
+          const available = Math.min(
+            window.innerWidth,
+            window.screen.availWidth,
+          );
+          this.previewsPerRow = Math.max(
+            1,
+            Math.min(4, Math.floor((available - 48) / 170)),
+          );
+          const ratio = this.canvasHeight / this.canvasWidth;
+          this.canvasWidth = Math.max(
+            48,
+            Math.min(
+              144,
+              Math.floor((available - 48) / (1.25 * this.previewsPerRow)),
+            ),
+          );
+          this.canvasHeight = Math.round(this.canvasWidth * ratio);
+          this.updatePreviews();
+          return module.originalOpenPanel.apply(this, args);
+        };
+        this.switcher._openPanel = this.openPanel;
+      }
     }
 
     getTabs() {
@@ -1655,6 +1683,10 @@
       }
       if (this.switcher.onKeyDown === this.keyDown) {
         this.switcher.onKeyDown = this.originalKeyDown;
+      }
+      if (this.switcher._openPanel === this.openPanel && this.openPanel) {
+        this.switcher._openPanel = this.originalOpenPanel;
+        this.switcher.previewsPerRow = this.originalColumns;
       }
       document.removeEventListener("keyup", this.switcher, {
         mozSystemGroup: true,

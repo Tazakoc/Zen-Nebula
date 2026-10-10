@@ -90,3 +90,29 @@ assert.equal(
 console.log(
   "PASS global Ctrl+Tab: MRU across workspaces, pending tabs, exclusions, keyboard guard and reload cleanup",
 );
+// Compact geometry must not grow with monitor resolution, and reload restores it.
+let updates = 0;
+switcher.previewsPerRow = 7;
+switcher.canvasWidth = 300;
+switcher.canvasHeight = 169;
+const nativeOpen = () => "native-open";
+switcher._openPanel = nativeOpen;
+switcher.updatePreviews = () => updates++;
+context.window.innerWidth = 1200;
+context.window.screen = { availWidth: 3840 };
+mod.init();
+assert.equal(switcher._openPanel(), "native-open");
+assert.equal(switcher.previewsPerRow, 4);
+assert.equal(switcher.canvasWidth, 144);
+assert.equal(switcher.canvasWidth * 1.25 * 4, 720);
+context.window.innerWidth = 500;
+switcher._openPanel();
+assert.equal(switcher.previewsPerRow, 2);
+assert.ok(switcher.canvasWidth * 1.25 * 2 <= 452);
+assert.equal(updates, 2);
+mod.destroy();
+assert.equal(switcher._openPanel, nativeOpen);
+assert.equal(switcher.previewsPerRow, 7);
+console.log(
+  "PASS compact geometry: wide monitor, narrow window and restoration",
+);
