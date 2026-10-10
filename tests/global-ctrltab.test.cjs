@@ -10,7 +10,8 @@ const tab = (attrs = {}, lastAccessed = 0) => ({
   hasAttribute: (n) => n in attrs,
 });
 const current = tab({ "zen-workspace-id": "a" }, 1),
-  other = tab({ "zen-workspace-id": "b", pending: true }, 3),
+  other = tab({ "zen-workspace-id": "b" }, 3),
+  unloaded = tab({ "zen-workspace-id": "b", pending: true }, 100),
   older = tab({ "zen-workspace-id": "a" }, 2),
   glance = tab({ "zen-glance-tab": true }, 8),
   empty = tab({ "zen-empty-tab": true }, 9),
@@ -42,6 +43,7 @@ const context = {
       current,
       other,
       older,
+      unloaded,
       glance,
       empty,
       hidden,
@@ -88,7 +90,7 @@ assert.equal(
   "Does not overwrite a later owner",
 );
 console.log(
-  "PASS global Ctrl+Tab: MRU across workspaces, pending tabs, exclusions, keyboard guard and reload cleanup",
+  "PASS global Ctrl+Tab: MRU across workspaces, unloaded-tab exclusion, keyboard guard and reload cleanup",
 );
 // Compact geometry must not grow with monitor resolution, and reload restores it.
 let updates = 0;

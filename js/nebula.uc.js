@@ -1702,6 +1702,7 @@
             !tab.closing &&
             !tab.hasAttribute("zen-empty-tab") &&
             !tab.hasAttribute("zen-glance-tab") &&
+            !tab.hasAttribute("pending") &&
             (!tab.hidden || tab.hasAttribute("zen-workspace-id")) &&
             (!Services.prefs.getBoolPref(
               "zen.tabs.ctrl-tab.ignore-essential-tabs",
