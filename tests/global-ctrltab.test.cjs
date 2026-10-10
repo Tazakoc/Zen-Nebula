@@ -92,6 +92,11 @@ console.log(
 );
 // Compact geometry must not grow with monitor resolution, and reload restores it.
 let updates = 0;
+switcher.panel = {
+  style: { setProperty() {} },
+  addEventListener() {},
+  removeEventListener() {},
+};
 switcher.previewsPerRow = 7;
 switcher.canvasWidth = 300;
 switcher.canvasHeight = 169;

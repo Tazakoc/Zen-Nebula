@@ -1674,6 +1674,14 @@
             ),
           );
           this.canvasHeight = Math.round(this.canvasWidth * ratio);
+          this.panel.style.setProperty(
+            "--nebula-preview-width",
+            `${this.canvasWidth}px`,
+          );
+          this.panel.style.setProperty(
+            "--nebula-preview-height",
+            `${this.canvasHeight}px`,
+          );
           this.updatePreviews();
           return module.originalOpenPanel.apply(this, args);
         };

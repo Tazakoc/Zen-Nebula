@@ -212,6 +212,9 @@ browser {
 }
 
 #ctrlTab-panel .ctrlTab-canvas {
+  width: var(--nebula-preview-width, 112px) !important;
+  height: var(--nebula-preview-height, 63px) !important;
+  min-height: 0 !important;
   border-radius: 6px !important;
   overflow: hidden;
   margin-bottom: 10px !important;
@@ -269,4 +272,12 @@ browser {
 /* The carousel stays on tabs; it never adds an eighth action card. */
 #ctrlTab-showAll {
   display: none !important;
+}
+
+/* Unloaded tabs retain native placeholder dimensions until a thumbnail arrives.
+   Keep both representations in the same box during carousel rotation. */
+#ctrlTab-panel .ctrlTab-canvas > :is(img, canvas) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
 }
