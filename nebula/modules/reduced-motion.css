@@ -1,0 +1,37 @@
+/* Keep keyframe end states so entrance effects cannot leave content hidden.
+   Browser-scoped selectors override the theme's important shorthands.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  :root *,
+  :root *::before,
+  :root *::after,
+  :root#main-window #browser *,
+  :root#main-window #browser *::before,
+  :root#main-window #browser *::after,
+  :root#main-window #browser .browserStack {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  :root#main-window
+    #tabbrowser-tabpanels
+    > .browserSidebarContainer:not(
+      .zen-glance-background,
+      .zen-glance-overlay,
+      :has(.zen-glance-background)
+    ),
+  :root#main-window
+    #tabbrowser-tabpanels
+    > .browserSidebarContainer
+    > .browserContainer,
+  :root#main-window #browser .browserStack {
+    scale: 1 !important;
+    transform: none !important;
+  }
+}

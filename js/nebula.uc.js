@@ -936,160 +936,152 @@
   // ========== NebulaMediaCoverArtModule ==========
   class NebulaMediaCoverArtModule {
     constructor() {
-      this.OVERLAY_ID = "Nebula-media-cover-art";
-      this.TOOLBAR_ITEM_SELECTOR = "#zen-media-controls-toolbar > toolbaritem";
-
-      this.lastArtworkUrl = null;
-      this.originalSetupMediaController = null;
-      this.overlay = null;
-      this._metadataChangeHandler = this._metadataChangeHandler.bind(this);
+      this.entries = new Map();
+      this.patches = [];
+      this.timer = null;
+      this.destroyed = false;
     }
 
     init() {
-      this._waitForController();
+      this._waitForController(40);
     }
 
-    _waitForController() {
-      if (
-        typeof window.gZenMediaController?.setupMediaController === "function"
-      ) {
-        this._onControllerReady();
-      } else {
-        requestIdleCallback(() =>
-          setTimeout(() => this._waitForController(), 200),
-        ); // gentle polling
+    _waitForController(attempts) {
+      if (this.destroyed) return;
+      const manager = window.gZenMediaController;
+      if (typeof manager?.activateMediaControls === "function") {
+        this._patch(manager, "activateMediaControls", (original, args) => {
+          const bar = manager.mediaControlBar;
+          const before = new Set(bar?.children || []);
+          const result = original.apply(manager, args);
+          const element = Array.from(
+            manager.mediaControlBar?.children || [],
+          ).find((child) => !before.has(child));
+          if (element) this._attach(args[0], element);
+          this._syncFront(manager);
+          return result;
+        });
+        this._patch(manager, "onCardVisibilityChanged", (original, args) => {
+          const result = original.apply(manager, args);
+          this._syncFront(manager);
+          return result;
+        });
+        this._patch(manager, "onCardDestroyed", (original, args) => {
+          this._detach(args[0]?.controller);
+          return original.apply(manager, args);
+        });
+        this._syncFront(manager);
+      } else if (typeof manager?.setupMediaController === "function") {
+        this._patch(manager, "setupMediaController", (original, args) => {
+          const result = original.apply(manager, args);
+          this._syncLegacy(manager);
+          return result;
+        });
+        this._syncLegacy(manager);
+      } else if (attempts > 0) {
+        this.timer = setTimeout(() => {
+          this.timer = null;
+          this._waitForController(attempts - 1);
+        }, 250);
       }
     }
 
-    _onControllerReady() {
-      if (this.originalSetupMediaController) return;
-
-      this.originalSetupMediaController =
-        gZenMediaController.setupMediaController.bind(gZenMediaController);
-      gZenMediaController.setupMediaController =
-        this._setupMediaControllerPatcher.bind(this);
-
-      const initialController = gZenMediaController._currentMediaController;
-      if (initialController) {
-        this._attachMetadataHandler(initialController);
-        this._setBackgroundFromMetadata(initialController);
-      } else {
-        this._manageOverlayVisibility(false);
-      }
-
-      Nebula.logger.log("✅ [MediaCoverArt] Hooked into MediaPlayer.");
+    _patch(target, key, callback) {
+      const original = target[key];
+      if (typeof original !== "function") return;
+      const module = this;
+      const wrapper = function (...args) {
+        if (module.destroyed) return original.apply(this, args);
+        return callback(original, args);
+      };
+      target[key] = wrapper;
+      this.patches.push({ target, key, original, wrapper });
     }
 
-    _setupMediaControllerPatcher(controller, browser) {
-      if (controller) {
-        this._attachMetadataHandler(controller);
-        this._setBackgroundFromMetadata(controller);
+    _syncFront(manager) {
+      const card = manager.frontCard;
+      if (card?.controller) this._attach(card.controller, card.element);
+      for (const [controller, entry] of this.entries) {
+        if (!entry.element.isConnected) this._detach(controller);
       }
-      return this.originalSetupMediaController(controller, browser);
     }
 
-    _attachMetadataHandler(controller) {
-      controller.removeEventListener(
-        "metadatachange",
-        this._metadataChangeHandler,
+    _syncLegacy(manager) {
+      const current = manager._currentMediaController;
+      for (const controller of this.entries.keys()) {
+        if (controller !== current) this._detach(controller);
+      }
+      this._attach(
+        current,
+        document.querySelector("#zen-media-controls-toolbar > toolbaritem"),
       );
-      controller.addEventListener(
-        "metadatachange",
-        this._metadataChangeHandler,
-      );
     }
 
-    _metadataChangeHandler(event) {
-      const controller = event.target;
-      if (controller && typeof controller.getMetadata === "function") {
-        this._setBackgroundFromMetadata(controller);
-      } else {
-        this._cleanupToDefaultState();
+    _attach(controller, element) {
+      if (!controller || !element || this.destroyed) return;
+      const existing = this.entries.get(controller);
+      if (existing?.element === element) return;
+      this._detach(controller);
+      const entry = { element, overlay: null, url: null };
+      entry.update = () => this._update(controller, entry);
+      entry.deactivate = () => this._detach(controller);
+      this.entries.set(controller, entry);
+      controller.addEventListener("metadatachange", entry.update);
+      controller.addEventListener("deactivated", entry.deactivate);
+      entry.update();
+    }
+
+    _update(controller, entry) {
+      if (this.destroyed || this.entries.get(controller) !== entry) return;
+      let artwork;
+      try {
+        artwork = controller.getMetadata()?.artwork;
+      } catch {
+        artwork = [];
       }
-    }
-
-    _setBackgroundFromMetadata(controller) {
-      const metadata = controller?.getMetadata?.();
-      const artwork = metadata?.artwork;
-
-      if (!Array.isArray(artwork) || !artwork.length) {
-        return this._cleanupToDefaultState();
+      const area = (item) => {
+        const [width, height] = (item.sizes || "").split("x").map(Number);
+        return Number.isFinite(width * height) ? width * height : 0;
+      };
+      const url = Array.isArray(artwork)
+        ? [...artwork]
+            .filter((item) => item.src)
+            .sort((a, b) => area(b) - area(a))[0]?.src
+        : null;
+      if (!url) {
+        entry.overlay?.remove();
+        entry.overlay = null;
+        entry.url = null;
+        return;
       }
-
-      const sorted = [...artwork].sort((a, b) => {
-        const [aw, ah] = a.sizes?.split("x").map(Number) || [0, 0];
-        const [bw, bh] = b.sizes?.split("x").map(Number) || [0, 0];
-        return bw * bh - aw * ah;
-      });
-
-      const coverUrl = sorted[0]?.src || null;
-      if (coverUrl === this.lastArtworkUrl) return;
-
-      this.lastArtworkUrl = coverUrl;
-      this._ensureOverlayElement();
-      this._updateOverlayStyle(coverUrl);
-    }
-
-    _ensureOverlayElement() {
-      if (this.overlay) return;
-
-      const toolbarItem = document.querySelector(this.TOOLBAR_ITEM_SELECTOR);
-      if (!toolbarItem) return;
-
-      this.overlay = document.createElement("div");
-      this.overlay.id = this.OVERLAY_ID;
-      toolbarItem.prepend(this.overlay);
-    }
-
-    _updateOverlayStyle(coverUrl) {
-      if (!this.overlay) return;
-
-      if (coverUrl) {
-        if (this.overlay.style.backgroundImage !== `url("${coverUrl}")`) {
-          this.overlay.style.backgroundImage = `url("${coverUrl}")`;
-        }
-        this.overlay.classList.add("visible");
-      } else {
-        this._cleanupToDefaultState();
+      if (entry.url === url && entry.overlay) return;
+      if (!entry.overlay) {
+        entry.overlay = document.createElement("div");
+        entry.overlay.className = "Nebula-media-cover-art visible";
+        entry.element.prepend(entry.overlay);
       }
+      entry.overlay.style.backgroundImage = `url(${JSON.stringify(url)})`;
+      entry.url = url;
     }
 
-    _manageOverlayVisibility(show) {
-      if (!this.overlay) return;
-
-      if (show) {
-        this.overlay.classList.add("visible");
-      } else {
-        this.overlay.classList.remove("visible");
-        this.overlay.style.backgroundImage = "none";
-      }
-    }
-
-    _cleanupToDefaultState() {
-      this.lastArtworkUrl = null;
-      this._manageOverlayVisibility(false);
-      this.overlay?.remove();
-      this.overlay = null;
+    _detach(controller) {
+      const entry = this.entries.get(controller);
+      if (!entry) return;
+      controller.removeEventListener("metadatachange", entry.update);
+      controller.removeEventListener("deactivated", entry.deactivate);
+      entry.overlay?.remove();
+      this.entries.delete(controller);
     }
 
     destroy() {
-      if (this.originalSetupMediaController) {
-        gZenMediaController.setupMediaController =
-          this.originalSetupMediaController;
-        this.originalSetupMediaController = null;
+      this.destroyed = true;
+      if (this.timer !== null) clearTimeout(this.timer);
+      this.timer = null;
+      for (const { target, key, original, wrapper } of this.patches.reverse()) {
+        if (target[key] === wrapper) target[key] = original;
       }
-
-      const current = gZenMediaController?._currentMediaController;
-      if (current) {
-        current.removeEventListener(
-          "metadatachange",
-          this._metadataChangeHandler,
-        );
-      }
-
-      this._cleanupToDefaultState();
-
-      Nebula.logger.log("🧹 [MediaCoverArt] Destroyed.");
+      this.patches = [];
+      for (const controller of this.entries.keys()) this._detach(controller);
     }
   }
 
@@ -1116,6 +1108,8 @@
       ];
 
       this.observers = new Map();
+      this.pendingFrames = new Map();
+      this.pendingTimers = new Map();
 
       // Bind methods
       this.handlePopupShowing = this.handlePopupShowing.bind(this);
@@ -1182,24 +1176,33 @@
     }
 
     animateMenuItems(popup) {
-      if (!popup) return;
-      const items = this.getMenuItems(popup);
-      // Batch DOM updates for animation
-      window.requestAnimationFrame(() => {
-        items.forEach((item, index) => this.animateItem(item, index));
+      if (!this.observers.has(popup) || this.pendingFrames.has(popup)) return;
+      const frame = window.requestAnimationFrame(() => {
+        this.pendingFrames.delete(popup);
+        if (!this.observers.has(popup)) return;
+        if (!this.animationsEnabled()) {
+          this.cleanupMenuItems(popup);
+          return;
+        }
+        this.getMenuItems(popup).forEach((item, index) =>
+          this.animateItem(item, index),
+        );
       });
+      this.pendingFrames.set(popup, frame);
+    }
+
+    animationsEnabled() {
+      return (
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+        getComputedStyle(this.root)
+          .getPropertyValue("--nebula-menu-animation")
+          .trim() === "true"
+      );
     }
 
     animateItem(item, index) {
-      const shouldAnimate =
-        getComputedStyle(this.root)
-          .getPropertyValue("--nebula-menu-animation")
-          .trim() === "true";
-
       item.classList.remove("nebula-menu-anim");
       item.style.animationDelay = "";
-
-      if (!shouldAnimate) return;
 
       const delay = Math.min(index * this.STAGGER_DELAY, this.MAX_DELAY);
       item.style.animationDelay = `${delay}ms`;
@@ -1208,12 +1211,17 @@
 
     cleanupMenuItems(popup) {
       if (!popup) return;
-      // Batch DOM updates for cleanup
-      window.requestAnimationFrame(() => {
-        popup.querySelectorAll(".nebula-menu-anim").forEach((item) => {
-          item.classList.remove("nebula-menu-anim");
-          item.style.animationDelay = "";
-        });
+      if (this.pendingFrames.has(popup)) {
+        window.cancelAnimationFrame(this.pendingFrames.get(popup));
+        this.pendingFrames.delete(popup);
+      }
+      if (this.pendingTimers.has(popup)) {
+        clearTimeout(this.pendingTimers.get(popup));
+        this.pendingTimers.delete(popup);
+      }
+      popup.querySelectorAll(".nebula-menu-anim").forEach((item) => {
+        item.classList.remove("nebula-menu-anim");
+        item.style.animationDelay = "";
       });
     }
 
@@ -1245,6 +1253,7 @@
       if (this.observers.has(popup)) return;
 
       const observer = new MutationObserver((mutations) => {
+        if (!this.observers.has(popup) || this.pendingTimers.has(popup)) return;
         if (
           mutations.some(
             (m) =>
@@ -1253,7 +1262,11 @@
                 ["hidden", "collapsed"].includes(m.attributeName)),
           )
         ) {
-          setTimeout(() => this.animateMenuItems(popup), 5);
+          const timer = setTimeout(() => {
+            this.pendingTimers.delete(popup);
+            this.animateMenuItems(popup);
+          }, 5);
+          this.pendingTimers.set(popup, timer);
         }
       });
 
@@ -1269,9 +1282,9 @@
 
     handlePopupShowing(event) {
       const popup = event.target;
-      if (!this.isTargetMenu(popup)) return;
-      this.animateMenuItems(popup);
+      if (!this.isTargetMenu(popup) || !this.animationsEnabled()) return;
       this.setupMutationObserver(popup);
+      this.animateMenuItems(popup);
     }
 
     handlePopupHidden(event) {
@@ -1301,6 +1314,10 @@
 
       this.observers.forEach((observer) => observer.disconnect());
       this.observers.clear();
+      this.pendingFrames.forEach((frame) => window.cancelAnimationFrame(frame));
+      this.pendingFrames.clear();
+      this.pendingTimers.forEach((timer) => clearTimeout(timer));
+      this.pendingTimers.clear();
 
       document.querySelectorAll(".nebula-menu-anim").forEach((item) => {
         item.classList.remove("nebula-menu-anim");

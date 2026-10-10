@@ -1,6 +1,6 @@
 /* -------------------- Media Controls Toolbar -------------------- */
 
-#Nebula-media-cover-art {
+.Nebula-media-cover-art {
   position: absolute !important;
   inset: 0 !important;
   z-index: -1 !important;
@@ -18,7 +18,7 @@
 
 #zen-media-controls-toolbar
   > toolbaritem:hover
-  > #Nebula-media-cover-art.visible {
+  > .Nebula-media-cover-art.visible {
   opacity: 0.4 !important;
 }
 
@@ -60,10 +60,14 @@
   position: relative;
   border-radius: var(--nebula-border-radius) !important;
   backdrop-filter: saturate(1) !important;
-  transition:
-    border-radius 0.3s ease,
-    box-shadow 0.3s ease-in-out,
-    background-color 0.3s ease-in-out;
+  /* Modern cards own their stack, hide and removal transitions. */
+  &:not(.zen-media-card) {
+    transition:
+      border-radius 0.3s ease,
+      box-shadow 0.3s ease-in-out,
+      background-color 0.3s ease-in-out;
+  }
+
   background-color: var(--nebula-color-min) !important;
 
   &:hover {
@@ -74,6 +78,12 @@
     ) !important;
     box-shadow: 0 0 15px var(--nebula-color-shadow);
   }
+}
+
+/* An opaque base prevents rear controls showing through a stacked player. */
+#zen-media-controls-toolbar:has(> .zen-media-card[stacked-behind])
+  > .zen-media-card {
+  background-color: light-dark(rgb(235 235 235), rgb(10 10 10)) !important;
 }
 
 /* --------------------- Media Info --------------------- */

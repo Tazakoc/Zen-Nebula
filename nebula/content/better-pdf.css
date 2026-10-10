@@ -1,4 +1,20 @@
 /* ------------ BETTER PDF VIEWER ----------- */
+@layer nebula-reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    html[mozdisallowselectionprint],
+    html[mozdisallowselectionprint] *,
+    html[mozdisallowselectionprint] *::before,
+    html[mozdisallowselectionprint] *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
 html[mozdisallowselectionprint] {
   --pdf-js-pseudobg-bg: #dedede;
   @media (prefers-color-scheme: dark) {
@@ -495,6 +511,10 @@ html[mozdisallowselectionprint] {
 
       &:is([open]) {
         animation: properties-appear 0.3s ease !important;
+
+        @media (prefers-reduced-motion: reduce) {
+          animation-duration: 0.01ms !important;
+        }
       }
 
       #documentPropertiesClose {
