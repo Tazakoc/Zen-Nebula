@@ -265,3 +265,8 @@ browser {
   outline: 2px solid currentcolor !important;
   outline-offset: 2px !important;
 }
+
+/* The carousel stays on tabs; it never adds an eighth action card. */
+#ctrlTab-showAll {
+  display: none !important;
+}

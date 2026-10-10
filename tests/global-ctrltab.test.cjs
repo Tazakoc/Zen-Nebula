@@ -102,17 +102,60 @@ context.window.innerWidth = 1200;
 context.window.screen = { availWidth: 3840 };
 mod.init();
 assert.equal(switcher._openPanel(), "native-open");
-assert.equal(switcher.previewsPerRow, 4);
-assert.equal(switcher.canvasWidth, 144);
-assert.equal(switcher.canvasWidth * 1.25 * 4, 720);
+assert.equal(switcher.previewsPerRow, 5);
+assert.equal(switcher.canvasWidth, 112);
+assert.equal(switcher.canvasWidth * 1.25 * 5, 700);
 context.window.innerWidth = 500;
 switcher._openPanel();
-assert.equal(switcher.previewsPerRow, 2);
-assert.ok(switcher.canvasWidth * 1.25 * 2 <= 452);
+assert.equal(switcher.previewsPerRow, 4);
+assert.ok(switcher.canvasWidth * 1.25 * 4 <= 452);
 assert.equal(updates, 2);
 mod.destroy();
 assert.equal(switcher._openPanel, nativeOpen);
 assert.equal(switcher.previewsPerRow, 7);
 console.log(
   "PASS compact geometry: wide monitor, narrow window and restoration",
+);
+// Every tab must remain reachable, including across both carousel boundaries.
+const many = [
+  current,
+  ...Array.from({ length: 12 }, (_, i) =>
+    tab({ "zen-workspace-id": i % 2 ? "a" : "b" }, 100 - i),
+  ),
+];
+context.document.querySelectorAll = () => many;
+context.gBrowser.warmupTab = () => {};
+context.window.innerWidth = 1200;
+switcher._selectedIndex = 0;
+Object.defineProperty(switcher, "selected", {
+  configurable: true,
+  get() {
+    return this.previews[this._selectedIndex];
+  },
+});
+switcher.updatePreviews = function () {
+  this.previews = this.tabList.map((t) => ({ _tab: t }));
+};
+mod.init();
+switcher.updatePreviews();
+const ordered = mod.getTabs();
+for (let i = 1; i <= ordered.length * 3; i++) {
+  switcher.advanceFocus(true);
+  assert.equal(switcher.selected._tab, ordered[i % ordered.length]);
+  assert.equal(switcher.tabList.length, 5);
+}
+for (let i = 1; i <= ordered.length * 3; i++) {
+  switcher.advanceFocus(false);
+  assert.equal(
+    switcher.selected._tab,
+    ordered[(ordered.length - (i % ordered.length)) % ordered.length],
+  );
+}
+context.window.innerWidth = 500;
+assert.equal(switcher.tabList.length, 4);
+mod.reset();
+assert.equal(switcher.tabList[0], current);
+mod.destroy();
+console.log(
+  "PASS carousel: all 13 tabs, forward/reverse wraparound, four/five visible and reset",
 );

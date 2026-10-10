@@ -1588,9 +1588,45 @@
       this.originalKeyDown = this.switcher.onKeyDown;
       if (!this.descriptor?.get || !this.descriptor.configurable) return;
       const module = this;
-      this.getter = function () {
-        return module.getTabs();
+      this.offset = 0;
+      this.reset = () => {
+        this.offset = 0;
       };
+      this.switcher.panel?.addEventListener("popuphidden", this.reset);
+      this.originalAdvance = this.switcher.advanceFocus;
+      this.getter = function () {
+        const tabs = module.getTabs();
+        const offset = module.offset % (tabs.length || 1);
+        return tabs
+          .slice(offset)
+          .concat(tabs.slice(0, offset))
+          .slice(0, module.capacity());
+      };
+      this.advance = function (forward) {
+        const tabs = module.getTabs();
+        if (!tabs.length) return;
+        const index = tabs.indexOf(this.selected?._tab);
+        const next =
+          (Math.max(0, index) + (forward ? 1 : -1) + tabs.length) % tabs.length;
+        let visible = this.tabList;
+        if (!visible.includes(tabs[next])) {
+          module.offset = forward
+            ? (next - module.capacity() + 1 + tabs.length) % tabs.length
+            : next;
+          this.updatePreviews();
+          visible = this.tabList;
+        }
+        const slot = visible.indexOf(tabs[next]);
+        if (this._selectedIndex === -1) this.previews[slot].focus();
+        else this._selectedIndex = slot;
+        gBrowser.warmupTab(tabs[next]);
+        if (this._timer) {
+          window.clearTimeout(this._timer);
+          this._timer = null;
+          this._openPanel();
+        }
+      };
+      this.switcher.advanceFocus = this.advance;
       Object.defineProperty(this.switcher, "tabList", {
         ...this.descriptor,
         get: this.getter,
@@ -1628,15 +1664,12 @@
             window.innerWidth,
             window.screen.availWidth,
           );
-          this.previewsPerRow = Math.max(
-            1,
-            Math.min(4, Math.floor((available - 48) / 170)),
-          );
+          this.previewsPerRow = module.capacity();
           const ratio = this.canvasHeight / this.canvasWidth;
           this.canvasWidth = Math.max(
             48,
             Math.min(
-              144,
+              112,
               Math.floor((available - 48) / (1.25 * this.previewsPerRow)),
             ),
           );
@@ -1646,6 +1679,10 @@
         };
         this.switcher._openPanel = this.openPanel;
       }
+    }
+
+    capacity() {
+      return window.innerWidth < 700 ? 4 : 5;
     }
 
     getTabs() {
@@ -1675,6 +1712,10 @@
     destroy() {
       if (!this.switcher || !this.getter) return;
       this.switcher.close();
+      this.switcher.panel?.removeEventListener("popuphidden", this.reset);
+      if (this.switcher.advanceFocus === this.advance) {
+        this.switcher.advanceFocus = this.originalAdvance;
+      }
       if (
         Object.getOwnPropertyDescriptor(this.switcher, "tabList")?.get ===
         this.getter
