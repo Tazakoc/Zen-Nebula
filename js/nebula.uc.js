@@ -1576,6 +1576,92 @@
     }
   }
 
+  // Use Zen's native switcher and selection path across workspace boundaries.
+  class NebulaGlobalCtrlTabModule {
+    init() {
+      this.switcher = window.ctrlTab;
+      if (!this.switcher) return;
+      this.descriptor = Object.getOwnPropertyDescriptor(
+        this.switcher,
+        "tabList",
+      );
+      this.originalKeyDown = this.switcher.onKeyDown;
+      if (!this.descriptor?.get || !this.descriptor.configurable) return;
+      const module = this;
+      this.getter = function () {
+        return module.getTabs();
+      };
+      Object.defineProperty(this.switcher, "tabList", {
+        ...this.descriptor,
+        get: this.getter,
+      });
+      this.keyDown = function (event) {
+        if (
+          ShortcutUtils.getSystemActionForEvent(event) !==
+            ShortcutUtils.CYCLE_TABS ||
+          event.defaultPrevented ||
+          this.KeyboardLockUtils.mustWaitForKeyboardLockRequestedReply(event)
+        )
+          return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.isOpen) {
+          this.advanceFocus(!event.shiftKey);
+          return;
+        }
+        if (event.shiftKey) {
+          this.showAllTabs("shift-tab");
+          return;
+        }
+        if (this.tabCount < 2) return;
+        document.addEventListener("keyup", this, { mozSystemGroup: true });
+        this.open();
+      };
+      this.switcher.onKeyDown = this.keyDown;
+    }
+
+    getTabs() {
+      const selected = gBrowser.selectedTab;
+      return Array.from(document.querySelectorAll("tab.tabbrowser-tab"))
+        .filter(
+          (tab) =>
+            tab.isConnected &&
+            !tab.closing &&
+            !tab.hasAttribute("zen-empty-tab") &&
+            !tab.hasAttribute("zen-glance-tab") &&
+            (!tab.hidden || tab.hasAttribute("zen-workspace-id")) &&
+            (!Services.prefs.getBoolPref(
+              "zen.tabs.ctrl-tab.ignore-essential-tabs",
+              false,
+            ) ||
+              !tab.hasAttribute("zen-essential") ||
+              tab === selected),
+        )
+        .sort((a, b) => {
+          if (a === selected) return -1;
+          if (b === selected) return 1;
+          return (b.lastAccessed || 0) - (a.lastAccessed || 0);
+        });
+    }
+
+    destroy() {
+      if (!this.switcher || !this.getter) return;
+      this.switcher.close();
+      if (
+        Object.getOwnPropertyDescriptor(this.switcher, "tabList")?.get ===
+        this.getter
+      ) {
+        Object.defineProperty(this.switcher, "tabList", this.descriptor);
+      }
+      if (this.switcher.onKeyDown === this.keyDown) {
+        this.switcher.onKeyDown = this.originalKeyDown;
+      }
+      document.removeEventListener("keyup", this.switcher, {
+        mozSystemGroup: true,
+      });
+    }
+  }
+
   // Register Nebula Modules
   Nebula.register(NebulaPolyfillModule);
   Nebula.register(NebulaGradientSliderModule);
@@ -1586,6 +1672,7 @@
   Nebula.register(NebulaMenuModule);
   Nebula.register(NebulaPinnedLayoutModule);
   Nebula.register(NebulaPDFStylesModule);
+  Nebula.register(NebulaGlobalCtrlTabModule);
 
   // Start the core
   Nebula.init();
