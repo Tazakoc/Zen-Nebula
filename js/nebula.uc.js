@@ -19,6 +19,8 @@
   window.Nebula = {
     _modules: [],
     _initialized: false,
+    _initializing: false,
+    _destroyed: false,
 
     logger: {
       _prefix: "[Nebula]",
@@ -34,12 +36,20 @@
     },
 
     runOnLoad(callback) {
-      if (document.readyState === "complete") callback();
+      if (this._destroyed) return;
+      this._onDocumentLoad = () => {
+        this._onDocumentLoad = null;
+        if (!this._destroyed) callback();
+      };
+      if (document.readyState !== "loading") this._onDocumentLoad();
       else
-        document.addEventListener("DOMContentLoaded", callback, { once: true });
+        document.addEventListener("DOMContentLoaded", this._onDocumentLoad, {
+          once: true,
+        });
     },
 
     register(ModuleClass) {
+      if (this._destroyed) return;
       const name = ModuleClass?.name || "UnnamedModule";
       if (!ModuleClass) {
         this.logger.warn(
@@ -64,11 +74,17 @@
       this._modules.push(instance);
 
       if (this._initialized && typeof instance.init === "function") {
-        try {
-          instance.init();
-        } catch (err) {
-          this.logger.error(`Module "${name}" failed to init:\n${err}`);
-        }
+        this._initModule(instance);
+      }
+    },
+
+    _initModule(instance) {
+      const report = (err) =>
+        this.logger.error(`Module "${instance._name}" failed to init:\n${err}`);
+      try {
+        Promise.resolve(instance.init?.()).catch(report);
+      } catch (err) {
+        report(err);
       }
     },
 
@@ -77,22 +93,27 @@
     },
 
     init() {
+      if (this._destroyed || this._initialized || this._initializing) return;
       this.logger.log("⏳ Initializing core...");
-      this._initialized = true;
+      this._initializing = true;
       this.runOnLoad(() => {
-        this._modules.forEach((m) => {
-          try {
-            m.init?.();
-          } catch (err) {
-            this.logger.error(`Module "${m._name}" failed to init:\n${err}`);
-          }
-        });
+        this._initializing = false;
+        this._initialized = true;
+        this._modules.forEach((m) => this._initModule(m));
       });
       this._onWindowUnload = () => this.destroy();
       window.addEventListener("unload", this._onWindowUnload, { once: true });
     },
 
     destroy() {
+      if (this._destroyed) return;
+      this._destroyed = true;
+      this._initialized = false;
+      this._initializing = false;
+      if (this._onDocumentLoad) {
+        document.removeEventListener("DOMContentLoaded", this._onDocumentLoad);
+        this._onDocumentLoad = null;
+      }
       if (this._onWindowUnload) {
         window.removeEventListener("unload", this._onWindowUnload);
       }
@@ -104,7 +125,7 @@
         }
       });
       this.logger.log("🧹 All modules destroyed.");
-      delete window.Nebula;
+      if (window.Nebula === this) delete window.Nebula;
     },
 
     debug: {
