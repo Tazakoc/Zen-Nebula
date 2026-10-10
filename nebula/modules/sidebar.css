@@ -96,6 +96,15 @@ html[nebula-compact-mode] #titlebar > .zen-browser-generic-background {
   }
 }
 
+/* Paint the floating sidebar itself. The separate negative-z overlay can fall
+   behind web content when Zen reveals the sidebar with the keyboard. */
+@media (-moz-pref("zen.view.compact.hide-tabbar")) {
+  :root[zen-compact-mode="true"] #navigator-toolbox #titlebar {
+    background: var(--zen-colors-tertiary) !important;
+    border-radius: 13px !important;
+  }
+}
+
 /* -------------------- SINGLE TOOLBAR -------------------- */
 
 html[nebula-single-toolbar][nebula-compact-mode] #titlebar {
