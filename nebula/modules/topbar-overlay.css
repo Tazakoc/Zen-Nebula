@@ -12,6 +12,16 @@
       position: relative;
     }
 
+    /* Zen also offsets the inner browser when window controls appear. The
+       overlaid strip needs no page compensation, including during transitions. */
+    &:has(#zen-appcontent-navbar-wrapper[should-hide="true"])
+      .browserSidebarContainer:is(.deck-selected, [zen-split="true"]):not(
+        .zen-glance-overlay
+      )
+      .browserContainer {
+      margin-top: 0 !important;
+    }
+
     #zen-appcontent-navbar-wrapper[should-hide="true"] {
       position: absolute !important;
       inset: 0 0 auto !important;
