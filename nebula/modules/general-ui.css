@@ -84,8 +84,14 @@ browser {
       height: 0.1px !important;
     }
 
-    #zen-appcontent-navbar-wrapper[zen-has-hover="true"] {
-      height: 34px !important;
+    /* Keep the bar expanded while Zen holds it open for a menu or keyboard
+       reveal, including after the pointer leaves the hover area. */
+    #zen-appcontent-navbar-wrapper:is(
+      [zen-has-hover="true"],
+      [has-popup-menu],
+      [zen-compact-mode-active]
+    ) {
+      height: var(--zen-toolbar-height, 34px) !important;
     }
   }
 
@@ -96,8 +102,12 @@ browser {
         height: 0.1px !important;
       }
 
-      #zen-appcontent-navbar-wrapper[zen-has-hover="true"] {
-        height: 38px !important;
+      #zen-appcontent-navbar-wrapper:is(
+        [zen-has-hover],
+        [has-popup-menu],
+        [zen-compact-mode-active]
+      ) {
+        height: var(--zen-toolbar-height-with-bookmarks, 38px) !important;
       }
     }
   }
