@@ -1,0 +1,49 @@
+/* In single-toolbar mode, reveal window controls without resizing the page.
+   Keep normal layout for bookmarks, customization, fullscreen and compact mode. */
+@media (-moz-pref("nebula-nogaps-mod")) and (-moz-pref("zen.view.hide-window-controls")) {
+  :root[zen-single-toolbar="true"]:not(
+      [customizing],
+      [zen-has-bookmarks],
+      [zen-compact-mode="true"],
+      [inDOMFullscreen="true"],
+      [inFullscreen="true"]
+    ) {
+    #zen-appcontent-wrapper {
+      position: relative;
+    }
+
+    #zen-appcontent-navbar-wrapper[should-hide="true"] {
+      position: absolute !important;
+      inset: 0 0 auto !important;
+      z-index: 5 !important;
+      height: var(--zen-toolbar-height, 34px) !important;
+      min-height: var(--zen-toolbar-height, 34px) !important;
+      background: var(--zen-colors-tertiary) !important;
+      opacity: 1 !important;
+      overflow: clip !important;
+      transform: translateY(calc(-100% + 1px));
+      transition: transform 160ms ease-out !important;
+      transition-delay: 100ms !important;
+
+      &:is(
+        [zen-has-hover="true"],
+        [has-popup-menu],
+        [zen-compact-mode-active]
+      ) {
+        transform: translateY(0);
+        transition-delay: 0s !important;
+      }
+
+      /* Let the whole strip slide together rather than separately hiding its
+         controls on Zen's old height-transition timer. */
+      .titlebar-buttonbox-container {
+        max-height: 100% !important;
+        transition: none !important;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none !important;
+      }
+    }
+  }
+}
