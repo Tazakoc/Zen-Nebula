@@ -197,6 +197,14 @@ scrollbox {
 }
 */
 
+/* Firefox's CustomizableUI migration 28 appends a spring to the tab strip,
+   assuming it is empty with vertical tabs. In Zen it is the sidebar column,
+   so the spring takes half its height. Keep it visible while customizing so
+   it can still be removed. */
+:root:not([customizing]) #TabsToolbar-customization-target > toolbarspring {
+  display: none !important;
+}
+
 /* Hide the overflow background gradient */
 .workspace-arrowscrollbox[overflowing] {
   --zen-scrollbar-overflow-background: transparent !important;

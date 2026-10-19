@@ -36,6 +36,7 @@ export default {
           "scrollbox",
           "window",
           "toolbaritem",
+          "toolbarspring",
           "stack",
           "menupopup",
           "panel",
