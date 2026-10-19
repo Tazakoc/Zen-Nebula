@@ -1,10 +1,9 @@
 /* In single-toolbar mode, reveal window controls without resizing the page.
-   Keep normal layout for bookmarks, customization, fullscreen and compact mode. */
+   Keep normal layout for bookmarks, customization and fullscreen. */
 @media (-moz-pref("nebula-nogaps-mod")) and (-moz-pref("zen.view.hide-window-controls")) {
   :root[zen-single-toolbar="true"]:not(
       [customizing],
       [zen-has-bookmarks],
-      [zen-compact-mode="true"],
       [inDOMFullscreen="true"],
       [inFullscreen="true"]
     ) {
