@@ -21,13 +21,45 @@
       margin-top: 0 !important;
     }
 
+    /* The strip is transparent, so it shows the window behind it, as the
+       sidebar does. While it is out, the page's top is clipped away under it
+       rather than moved. Assumes the page starts at the wrapper's top, which
+       the no-gaps mod's zero margins guarantee. The sides and bottom extend
+       past the box so nothing else is clipped. */
+    .browserSidebarContainer:is(.deck-selected, [zen-split="true"]):not(
+        .zen-glance-overlay
+      )
+      .browserContainer {
+      clip-path: inset(0 -20px -20px);
+      transition: clip-path 160ms ease-out 100ms;
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    &:has(
+        #zen-appcontent-navbar-wrapper[should-hide="true"]:is(
+            [zen-has-hover="true"],
+            [has-popup-menu],
+            [zen-compact-mode-active]
+          )
+      )
+      .browserSidebarContainer:is(.deck-selected, [zen-split="true"]):not(
+        .zen-glance-overlay
+      )
+      .browserContainer {
+      clip-path: inset(var(--zen-toolbar-height, 34px) -20px -20px);
+      transition-delay: 0s;
+    }
+
     #zen-appcontent-navbar-wrapper[should-hide="true"] {
       position: absolute !important;
       inset: 0 0 auto !important;
       z-index: 5 !important;
       height: var(--zen-toolbar-height, 34px) !important;
       min-height: var(--zen-toolbar-height, 34px) !important;
-      background: var(--zen-colors-tertiary) !important;
+      background: transparent !important;
       opacity: 1 !important;
       overflow: clip !important;
       transform: translateY(calc(-100% + 1px));
